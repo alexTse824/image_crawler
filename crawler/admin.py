@@ -38,3 +38,8 @@ class TaskAdmin(admin.ModelAdmin):
 @admin.register(Crawler)
 class CrawlerAdmin(admin.ModelAdmin):
     list_display = ('ip', 'status', 'browser_version', 'driver_version')
+
+
+admin.site.site_header = '图片搜集管理平台'
+admin.site.site_title = '图片搜集管理平台'
+admin.site.index_title = '管理首页'
