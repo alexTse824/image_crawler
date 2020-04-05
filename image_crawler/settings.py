@@ -83,4 +83,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 CELERY_BROKER_URL = 'amqp://admin:admin@localhost'
-# CELERY_RESULT_BACKEND = 'django-db'
+
+# 用户全局变量
+DATA_DIR = '/Users/xie/Downloads/data'

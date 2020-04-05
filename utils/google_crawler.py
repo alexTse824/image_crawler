@@ -7,7 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from concurrent.futures import ThreadPoolExecutor
 
-from crawler.models import Image, Task
+from crawler.models import Image, Task, Keyword
 
 
 MAX_THREAD = 4
@@ -60,7 +60,8 @@ class GoogleCrawler:
                     url=src if src.startswith('http') and len(src) <= 128 else None,
                     file_path=file_path,
                     md5=md5_filename,
-                    task=Task.objects.get(id=self.task_id)
+                    task=Task.objects.get(id=self.task_id),
+                    keyword=Keyword.objects.get(name=self.keyword)
                 ).save()
         except Exception:
             print(traceback.print_exc())
