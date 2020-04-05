@@ -16,7 +16,12 @@ class KeywordAdmin(admin.ModelAdmin):
 
 @admin.register(Image)
 class ImageAdmin(admin.ModelAdmin):
-    list_display = ('file_path', 'url', 'md5', 'task' )
+    list_display = ('keyword', 'file_path', 'url', 'md5', 'task')
+    list_filter = ('task__keyword',)
+
+    @staticmethod
+    def keyword(instance):
+        return instance.task.keyword
 
 
 @admin.register(Task)
@@ -26,8 +31,8 @@ class TaskAdmin(admin.ModelAdmin):
     inlines = [ImageInline]
 
     @staticmethod
-    def images_count(task_id):
-        return len(Image.objects.filter(task_id=task_id))
+    def images_count(instance):
+        return len(Image.objects.filter(task_id=instance.id))
 
     def save_model(self, request, obj, form, change):
         obj.save()
