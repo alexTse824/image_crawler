@@ -2,23 +2,20 @@ import os
 from django.contrib import admin
 from django.conf import settings
 
-from .models import Image, Keyword, Task, Crawler
+from .models import Image, Keyword, Task
 from .tasks import crawl_image
-
-
-# class ImageInline(admin.TabularInline):
-#     model = Image
-#     readonly_fields = ('url', 'file_path', 'md5')
 
 
 @admin.register(Keyword)
 class KeywordAdmin(admin.ModelAdmin):
     list_display = ['name', 'images_count']
     actions = ['refresh_images']
+    search_fields = ['name']
 
-    @staticmethod
-    def images_count(obj):
+    def images_count(self, obj):
         return len(Image.objects.filter(keyword=obj.id))
+
+    images_count.short_description = '图片数量'
 
     def changelist_view(self, request, extra_context=None):
         if 'action' in request.POST and request.POST['action'] == 'refresh_images':
@@ -47,33 +44,34 @@ class KeywordAdmin(admin.ModelAdmin):
 
 @admin.register(Image)
 class ImageAdmin(admin.ModelAdmin):
-    list_display = ('md5', 'keyword', 'url', 'task')
-    list_filter = ('keyword',)
+    list_display_links = ['md5']
+    list_display = ['md5', 'keyword', 'download_time', 'status']
+    list_filter = ('keyword', 'status')
 
-    @staticmethod
-    def keyword(instance):
-        return instance.task.keyword
+    def download_time(self, instance):
+        if not instance.task:
+            return None
+        else:
+            return instance.task.time
+
+    download_time.short_description = '下载时间'
 
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     list_display = ('id', 'keyword', 'time', 'images_count')
     list_display_links = ('time',)
-    # inlines = [ImageInline]
+    date_hierarchy = 'time'
 
-    @staticmethod
-    def images_count(obj):
+    def images_count(self, obj):
         return len(Image.objects.filter(task=obj.id))
+
+    images_count.short_description = '图片数量'
 
     def save_model(self, request, obj, form, change):
         obj.save()
         crawl_image.delay(str(obj.keyword), obj.id)
         super().save_model(request, obj, form, change)
-
-
-@admin.register(Crawler)
-class CrawlerAdmin(admin.ModelAdmin):
-    list_display = ('ip', 'status', 'browser_version', 'driver_version')
 
 
 admin.site.site_header = '图片搜集管理平台'
