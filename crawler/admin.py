@@ -1,6 +1,4 @@
-import os
 from django.contrib import admin
-from django.conf import settings
 
 from .models import Image, Keyword, Task
 from .tasks import crawl_image, refresh_image_library
@@ -32,6 +30,7 @@ class KeywordAdmin(admin.ModelAdmin):
     refresh_images.short_description = '更新图片库'
 
 
+# TODO: 图片批量导出
 @admin.register(Image)
 class ImageAdmin(admin.ModelAdmin):
     list_display_links = ['md5']
@@ -47,20 +46,28 @@ class ImageAdmin(admin.ModelAdmin):
     download_time.short_description = '下载时间'
 
 
+# TODO: 批量生成任务
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('id', 'keyword', 'time', 'images_count')
-    list_display_links = ('time',)
-    date_hierarchy = 'time'
+    list_display = ('id', 'keyword', 'scanned_images_count', 'images_count', 'download_rate', 'start_time', 'end_time')
+    list_display_links = ('id',)
+    date_hierarchy = 'start_time'
+    fields = ['keyword']
 
     def images_count(self, obj):
         return len(Image.objects.filter(task=obj.id))
 
-    images_count.short_description = '图片数量'
+    images_count.short_description = '图片下载数量'
+
+    def download_rate(self, obj):
+        if obj.scanned_images_count:
+            return '{:.2%}'.format(len(Image.objects.filter(task=obj.id)) / obj.scanned_images_count)
+
+    download_rate.short_description = '下载率'
 
     def save_model(self, request, obj, form, change):
         obj.save()
-        crawl_image.delay(str(obj.keyword), obj.id)
+        crawl_image.delay(obj.keyword.name, obj.id)
         super().save_model(request, obj, form, change)
 
 

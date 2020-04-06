@@ -5,6 +5,7 @@ from django.db import models
 
 
 # TODO: 任务执行结束时间，下载/扫描图片数量，任务执行状态
+# TODO: 图片详情页预览图
 class Image(models.Model):
     id = models.AutoField(primary_key=True)
     url = models.CharField(max_length=128, null=True, blank=True)
@@ -62,9 +63,10 @@ class Keyword(models.Model):
 
 class Task(models.Model):
     id = models.AutoField(primary_key=True)
-    time = models.DateTimeField(verbose_name='开始时间', auto_now_add=True)
+    start_time = models.DateTimeField(verbose_name='开始时间', auto_now_add=True)
+    end_time = models.DateTimeField(verbose_name='结束时间', null=True, blank=True)
     keyword = models.ForeignKey('Keyword', verbose_name='关键字', related_name='tasks', on_delete=models.PROTECT)
-
+    scanned_images_count = models.IntegerField(verbose_name='图片扫描数量', null=True, blank=True)
     class Meta:
         verbose_name = '任务'
         verbose_name_plural = '任务'

@@ -7,7 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from concurrent.futures import ThreadPoolExecutor
 
-from crawler.models import Image, Task, Keyword
+from crawler.models import Image, Keyword, Task
 
 
 MAX_THREAD = 4
@@ -65,6 +65,7 @@ class GoogleCrawler:
                 ).save()
         except Exception:
             print(traceback.print_exc())
+            browser.quit()
 
     def start_crawl(self):
         url = 'https://www.google.com/search?q={}&tbm=isch'.format(self.keyword)
@@ -91,6 +92,10 @@ class GoogleCrawler:
 
         ele_list = self.browser.find_elements_by_class_name('rg_i')
         print(f'Scanned {len(ele_list)} {self.keyword} images.')
+        task_obj = Task.objects.get(id=self.task_id)
+        task_obj.scanned_images_count =len(ele_list)
+        task_obj.save()
+
         pool = ThreadPoolExecutor(MAX_THREAD)
         for element in ele_list:
             self.scorll_to_element_by_js(self.browser, element)
