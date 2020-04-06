@@ -20,7 +20,10 @@ def refresh_image_library():
         dir_path = os.path.join(settings.DATA_DIR, keyword)
         if not os.path.isdir(dir_path):
             continue
-        elif not Keyword.objects.filter(name=keyword.lower()):
+
+        try:
+            keyword_obj = Keyword.objects.get(name=keyword.lower())
+        except Exception:
             keyword_obj = Keyword(name=keyword.lower())
             keyword_obj.save()
 
