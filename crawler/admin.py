@@ -41,7 +41,7 @@ class ImageAdmin(admin.ModelAdmin):
         if not instance.task:
             return None
         else:
-            return instance.task.time
+            return Task.objects.get(id=instance.task.id).start_time
 
     download_time.short_description = '下载时间'
 

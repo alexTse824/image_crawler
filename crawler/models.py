@@ -4,8 +4,8 @@ import hashlib
 from django.db import models
 
 
-# TODO: 任务执行结束时间，下载/扫描图片数量，任务执行状态
 # TODO: 图片详情页预览图
+# TODO: 优化celery进程协程线程
 class Image(models.Model):
     id = models.AutoField(primary_key=True)
     url = models.CharField(max_length=128, null=True, blank=True)
@@ -45,6 +45,7 @@ class Image(models.Model):
             Image(file_path=md5_file_path, md5=md5_filename, keyword=keyword_obj).save()
 
 
+# TODO: 化石演化树
 class Keyword(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(verbose_name='关键字', max_length=128, null=False, blank=False, unique=True)
@@ -67,6 +68,7 @@ class Task(models.Model):
     end_time = models.DateTimeField(verbose_name='结束时间', null=True, blank=True)
     keyword = models.ForeignKey('Keyword', verbose_name='关键字', related_name='tasks', on_delete=models.PROTECT)
     scanned_images_count = models.IntegerField(verbose_name='图片扫描数量', null=True, blank=True)
+
     class Meta:
         verbose_name = '任务'
         verbose_name_plural = '任务'

@@ -9,7 +9,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 from crawler.models import Image, Keyword, Task
 
-
 MAX_THREAD = 4
 DST_DIR = '/Users/xie/Downloads/data'
 DRIVER = '/Users/xie/code/image_crawler/utils/geckodriver'
@@ -41,6 +40,7 @@ class GoogleCrawler:
         js = "arguments[0].scrollIntoView();"
         browser.execute_script(js, tag)
 
+    # TODO: 降低图片下载等待延时
     def get_screenshot(self, src):
         try:
             browser = self.get_browser()
@@ -93,7 +93,7 @@ class GoogleCrawler:
         ele_list = self.browser.find_elements_by_class_name('rg_i')
         print(f'Scanned {len(ele_list)} {self.keyword} images.')
         task_obj = Task.objects.get(id=self.task_id)
-        task_obj.scanned_images_count =len(ele_list)
+        task_obj.scanned_images_count = len(ele_list)
         task_obj.save()
 
         pool = ThreadPoolExecutor(MAX_THREAD)
