@@ -86,6 +86,3 @@ MEDIA_ROOT = '/Users/xie/Desktop/data'
 MEDIA_URL = '/media/'
 
 CELERY_BROKER_URL = 'amqp://admin:admin@localhost'
-
-# 用户全局变量
-DATA_DIR = '/Users/xie/Downloads/data'
