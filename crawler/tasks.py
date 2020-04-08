@@ -1,4 +1,6 @@
 import os
+import imghdr
+import hashlib
 from datetime import datetime
 from django.conf import settings
 from celery import shared_task
@@ -20,23 +22,27 @@ def crawl_image(keyword, task_id):
 # TODO: 更新图片库后台状态显示
 # TODO: 关键字更新，关键字图库更新分部进行
 @shared_task
-def refresh_image_library():
+def delete_redundant_files():
     print('Start refresh image library')
-    for keyword in os.listdir(settings.DATA_DIR):
-        dir_path = os.path.join(settings.DATA_DIR, keyword)
-        if not os.path.isdir(dir_path):
+    IMAGES_ROOT = os.path.join(settings.MEDIA_ROOT, 'images')
+
+    # 删除库中文件夹或非图像文件
+    for filename in os.listdir(IMAGES_ROOT):
+        path = os.path.join(IMAGES_ROOT, filename)
+
+        if os.path.isdir(path) or not imghdr.what(path):
+            print(f'Invalid item for image library: {path}')
+            os.remove(path)
             continue
 
-        try:
-            keyword_obj = Keyword.objects.get(name=keyword.lower())
-        except Exception:
-            keyword_obj = Keyword(name=keyword.lower())
-            keyword_obj.save()
+        # 图片路径在数据库中未找到
+        file_relative_path = f'images/{filename}'
+        if not Image.objects.filter(image_file=file_relative_path):
+            print(f'File not found in database: {path}')
+            os.remove(path)
 
-        for filename in os.listdir(dir_path):
-            file_path = os.path.join(dir_path, filename)
-            Image.import_exist_file(file_path, keyword_obj)
-
+    # 数据库校验文件库
     for obj in Image.objects.all():
-        if not os.path.exists(obj.file_path):
+        if not os.path.exists(obj.image_file.path):
+            print(f'Database item not found: {obj.image_file.path}')
             obj.delete()

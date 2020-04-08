@@ -10,6 +10,7 @@ from django.core.files.base import ContentFile
 
 from crawler.models import Image, Keyword, Task
 
+
 MAX_THREAD = 4
 DRIVER = '/Users/xie/code/image_crawler/utils/geckodriver'
 PROXY = 'https://xgjpac.com/houxudonggis/5300657.pac'

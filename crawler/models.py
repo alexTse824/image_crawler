@@ -6,10 +6,7 @@ from django.db import models
 
 
 # TODO: 优化celery进程协程线程
-def get_image_dir(instance, filename):
-    return os.path.join(instance.keyword.name, filename)
-
-
+# TODO: 删除图片对象同时删除文件
 class Image(models.Model):
     id = models.AutoField(primary_key=True)
     url = models.CharField(max_length=128, null=True, blank=True)
@@ -18,7 +15,7 @@ class Image(models.Model):
                              blank=True)
     keyword = models.ForeignKey('Keyword', verbose_name='关键字', related_name='images', on_delete=models.PROTECT)
     status = models.BooleanField(verbose_name='筛选状态', null=True, blank=True)
-    image_file = models.ImageField(verbose_name='图片', upload_to=get_image_dir)
+    image_file = models.ImageField(verbose_name='图片', upload_to='images/')
 
     class Meta:
         verbose_name = '图片'
