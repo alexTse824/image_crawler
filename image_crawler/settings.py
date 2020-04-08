@@ -82,6 +82,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+MEDIA_ROOT = '/Users/xie/Desktop/data'
+MEDIA_URL = '/media/'
+
 CELERY_BROKER_URL = 'amqp://admin:admin@localhost'
 
 # 用户全局变量

@@ -36,6 +36,7 @@ class ImageAdmin(admin.ModelAdmin):
     list_display_links = ['md5']
     list_display = ['md5', 'keyword', 'download_time', 'status']
     list_filter = ('keyword', 'status')
+    readonly_fields = ['image_element']
 
     def download_time(self, instance):
         if not instance.task:

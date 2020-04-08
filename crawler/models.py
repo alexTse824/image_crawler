@@ -1,20 +1,24 @@
 import os
 import imghdr
 import hashlib
+from django.utils.html import mark_safe
 from django.db import models
 
 
-# TODO: 图片详情页预览图
 # TODO: 优化celery进程协程线程
+def get_image_dir(instance, filename):
+    return os.path.join(instance.keyword.name, filename)
+
+
 class Image(models.Model):
     id = models.AutoField(primary_key=True)
     url = models.CharField(max_length=128, null=True, blank=True)
-    file_path = models.CharField(verbose_name='图片路径', max_length=128)
     md5 = models.CharField(verbose_name='MD5', max_length=32, unique=True)
     task = models.ForeignKey('Task', verbose_name='任务', related_name='images', on_delete=models.PROTECT, null=True,
                              blank=True)
     keyword = models.ForeignKey('Keyword', verbose_name='关键字', related_name='images', on_delete=models.PROTECT)
     status = models.BooleanField(verbose_name='筛选状态', null=True, blank=True)
+    image_file = models.ImageField(verbose_name='图片', upload_to=get_image_dir)
 
     class Meta:
         verbose_name = '图片'
@@ -43,6 +47,12 @@ class Image(models.Model):
             md5_file_path = os.path.join(dir_path, f'{md5_filename}.{postfix}')
             os.rename(file_path, md5_file_path)
             Image(file_path=md5_file_path, md5=md5_filename, keyword=keyword_obj).save()
+
+    def image_element(self, height=250):
+        return mark_safe(f'<img src="{self.image_file.url}" height="{height}" />')
+
+    def image_icon(self):
+        return self.image_element(50)
 
 
 # TODO: 化石演化树
