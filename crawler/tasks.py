@@ -1,11 +1,10 @@
 import os
 import imghdr
-import hashlib
 from datetime import datetime
 from django.conf import settings
 from celery import shared_task
 
-from .models import Keyword, Image, Task
+from .models import Image, Task
 from utils.google_crawler import GoogleCrawler
 
 
@@ -19,8 +18,7 @@ def crawl_image(keyword, task_id):
     task_obj.save()
 
 
-# TODO: 更新图片库后台状态显示
-# TODO: 关键字更新，关键字图库更新分部进行
+# TODO: celery日志
 @shared_task
 def delete_redundant_files():
     print('Start refresh image library')

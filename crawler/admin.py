@@ -1,17 +1,20 @@
 import os
 from django.http import FileResponse
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.shortcuts import render, HttpResponseRedirect
+from django.core.files.base import ContentFile
 
 from .models import Image, Keyword, Task
 from .tasks import crawl_image, delete_redundant_files
-from utils.utils import zip_files
+from .forms import SelectFilesForm
+from utils.utils import zip_files, get_file_md5_postfix
 
 
 @admin.register(Keyword)
 class KeywordAdmin(admin.ModelAdmin):
     list_display = ['name', 'images_count']
     search_fields = ['name']
-    actions = ['download_packed_images_action']
+    actions = ['download_packed_images_action', 'images_upload_action']
 
     def images_count(self, obj):
         return len(Image.objects.filter(keyword=obj.id))
@@ -29,10 +32,36 @@ class KeywordAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = f'attachment;filename="{os.path.split(zip_path)[-1]}"'
         return response
 
-    download_packed_images_action.short_description = '下载所选的关键字图片库'
+    download_packed_images_action.short_description = '下载所选关键字图片库'
+
+    def images_upload_action(self, request, queryset):
+        if len(queryset) > 1:
+            messages.error(request, '不能上传同时至多个图片库')
+        else:
+            form = None
+            if 'apply' in request.POST:
+                form = SelectFilesForm(request.POST, request.FILES)
+                files = request.FILES.getlist('file_field')
+                if form.is_valid():
+                    keyword = request.POST['keyword']
+                    for file in files:
+                        file_content = file.read()
+                        md5_filename, postfix = get_file_md5_postfix(file_content)
+                        if not Image.objects.filter(md5=md5_filename):
+                            img_obj = Image(
+                                md5=md5_filename,
+                                keyword=Keyword.objects.get(name=keyword)
+                            )
+                            img_obj.image_file.save(f'{md5_filename}.{postfix}', ContentFile(file_content))
+                return HttpResponseRedirect(request.get_full_path())
+
+            if not form:
+                form = SelectFilesForm(initial={'_selected_action': request.POST.getlist(admin.ACTION_CHECKBOX_NAME)})
+            return render(request, 'select_file.html', {'keyword': queryset[0].name, 'form': form, 'title': '上传本地图片'})
+
+    images_upload_action.short_description = '批量上传图片至图片库'
 
 
-# TODO: 图片本地批量导入action
 @admin.register(Image)
 class ImageAdmin(admin.ModelAdmin):
     list_display_links = ['md5']

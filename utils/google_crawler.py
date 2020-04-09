@@ -1,7 +1,4 @@
-import os
-import imghdr
 import time
-import hashlib
 import traceback
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -9,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from django.core.files.base import ContentFile
 
 from crawler.models import Image, Keyword, Task
+from utils.utils import get_file_md5_postfix
 
 
 MAX_THREAD = 4
@@ -45,8 +43,7 @@ class GoogleCrawler:
             browser.get(src)
             img = browser.find_element_by_tag_name('img').screenshot_as_png
 
-            md5_filename = hashlib.md5(img).hexdigest()
-            postfix = imghdr.what(None, img)
+            md5_filename, postfix = get_file_md5_postfix(img)
 
             if not Image.objects.filter(md5=md5_filename):
                 img_obj = Image(

@@ -1,6 +1,8 @@
 import os
 import time
 import zipfile
+import hashlib
+import imghdr
 from django.conf import settings
 
 
@@ -19,3 +21,7 @@ def zip_files(file_dict):
             zf.write(abs_fpath, arcname)
     zf.close()
     return zip_abs_file_path
+
+
+def get_file_md5_postfix(file_content):
+    return hashlib.md5(file_content).hexdigest(), imghdr.what(None, file_content)

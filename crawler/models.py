@@ -27,27 +27,6 @@ class Image(models.Model):
         self.image_file.delete(self.image_file.name)
         super().delete()
 
-    @staticmethod
-    def import_exist_file(file_path, keyword_obj):
-        # 图片路径已在库中存在
-        if Image.objects.filter(file_path=file_path):
-            return
-
-        with open(file_path, 'rb') as f:
-            img = f.read()
-        md5_filename = hashlib.md5(img).hexdigest()
-        postfix = imghdr.what(None, img)
-
-        # 图片路径不在库中，但库中存在相同md5图片
-        if Image.objects.filter(md5=md5_filename):
-            os.remove(file_path)
-        # 图片路径与md5均不在库中
-        else:
-            dir_path, keyword = os.path.split(file_path)
-            md5_file_path = os.path.join(dir_path, f'{md5_filename}.{postfix}')
-            os.rename(file_path, md5_file_path)
-            Image(file_path=md5_file_path, md5=md5_filename, keyword=keyword_obj).save()
-
     def image_element(self, height=250):
         return mark_safe(f'<img src="{self.image_file.url}" height="{height}" />')
 
