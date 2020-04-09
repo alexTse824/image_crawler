@@ -1,22 +1,37 @@
+import os
+from django.http import FileResponse
 from django.contrib import admin
 
 from .models import Image, Keyword, Task
 from .tasks import crawl_image, delete_redundant_files
+from utils.utils import zip_files
 
 
 @admin.register(Keyword)
 class KeywordAdmin(admin.ModelAdmin):
     list_display = ['name', 'images_count']
-
     search_fields = ['name']
+    actions = ['download_packed_images_action']
 
     def images_count(self, obj):
         return len(Image.objects.filter(keyword=obj.id))
 
     images_count.short_description = '图片数量'
 
+    def download_packed_images_action(self, request, queryset):
+        filename_dict = {}
+        for keyword_obj in queryset:
+            img_objs = Image.objects.filter(keyword=keyword_obj)
+            filename_dict[keyword_obj.name] = [obj.image_file.name for obj in img_objs]
+        zip_path = zip_files(filename_dict)
+        response = FileResponse(open(zip_path, 'rb'))
+        response['Content-Type'] = 'application/octet-stream'
+        response['Content-Disposition'] = f'attachment;filename="{os.path.split(zip_path)[-1]}"'
+        return response
 
-# TODO: 图片批量导出
+    download_packed_images_action.short_description = '下载所选的关键字图片库'
+
+
 # TODO: 图片本地批量导入action
 @admin.register(Image)
 class ImageAdmin(admin.ModelAdmin):
