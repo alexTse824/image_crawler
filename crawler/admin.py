@@ -1,6 +1,8 @@
 import os
 from django.http import FileResponse
 from django.contrib import admin, messages
+from django.contrib.admin.views.main import ChangeList
+from django.core.paginator import EmptyPage, InvalidPage, Paginator
 from django.shortcuts import render, HttpResponseRedirect
 from django.core.files.base import ContentFile
 
@@ -10,6 +12,63 @@ from .forms import SelectFilesForm
 from utils.utils import zip_files, get_file_md5_postfix
 
 
+class InlineChangeList:
+    can_show_all = True
+    multi_page = True
+    get_query_string = ChangeList.__dict__['get_query_string']
+
+    def __init__(self, request, page_num, paginator):
+        self.show_all = 'all' in request.GET
+        self.page_num = page_num
+        self.paginator = paginator
+        self.result_count = paginator.count
+        self.params = dict(request.GET.items())
+
+
+class PaginationInline(admin.TabularInline):
+    template = 'admin/edit_inline/tabular_paginated.html'
+    per_page = 10
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset_class = super(PaginationInline, self).get_formset(
+            request, obj, **kwargs)
+
+        class PaginationFormSet(formset_class):
+            def __init__(self, *args, **kwargs):
+                super(PaginationFormSet, self).__init__(*args, **kwargs)
+
+                qs = self.queryset
+                paginator = Paginator(qs, self.per_page)
+                try:
+                    page_num = int(request.GET.get('p', '0'))
+                except ValueError:
+                    page_num = 0
+
+                try:
+                    page = paginator.page(page_num + 1)
+                except (EmptyPage, InvalidPage):
+                    page = paginator.page(paginator.num_pages)
+
+                self.cl = InlineChangeList(request, page_num, paginator)
+                self.paginator = paginator
+
+                if self.cl.show_all:
+                    self._queryset = qs
+                else:
+                    self._queryset = page.object_list
+
+        PaginationFormSet.per_page = self.per_page
+        return PaginationFormSet
+
+
+class ImageInline(PaginationInline):
+    model = Image
+    fields = ['md5', 'keyword', 'task', 'status']
+    readonly_fields = ['md5', 'keyword', 'task', 'status']
+    extra = 0
+    list_per_page = 10
+
+
 # TODO: keyword inline image
 # TODO: 批量导入关键字
 @admin.register(Keyword)
@@ -17,6 +76,7 @@ class KeywordAdmin(admin.ModelAdmin):
     list_display = ['name', 'images_count']
     search_fields = ['name']
     actions = ['download_packed_images_action', 'images_upload_action', 'batch_generate_tasks']
+    inlines = [ImageInline]
 
     def images_count(self, obj):
         return len(Image.objects.filter(keyword=obj.id))
@@ -82,6 +142,7 @@ class ImageAdmin(admin.ModelAdmin):
     list_filter = ('keyword', 'status')
     readonly_fields = ['image_element']
     actions = ['delete_redundant_files_action']
+    list_per_page = 20
 
     def changelist_view(self, request, extra_context=None):
         if 'action' in request.POST and request.POST['action'] == 'delete_redundant_files_action':
@@ -107,6 +168,7 @@ class ImageAdmin(admin.ModelAdmin):
 
 
 # TODO: Task save 生成任务机制优化，通过model.save()实现
+# TODO: 任务完成后修改任务信息导致重新执行任务BUG
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     list_display = (
