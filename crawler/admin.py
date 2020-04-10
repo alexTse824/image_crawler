@@ -69,13 +69,32 @@ class ImageInline(PaginationInline):
     list_per_page = 10
 
 
-# TODO: keyword inline image
+class BlankCheckboxModelAdmin(admin.ModelAdmin):
+    registered_actions = [
+        'delete_redundant_files_action',
+        'batch_insert_keywords_action',
+    ]
+
+    def changelist_view(self, request, extra_context=None):
+        if 'action' in request.POST and request.POST['action'] in self.registered_actions:
+            if not request.POST.getlist(admin.ACTION_CHECKBOX_NAME):
+                post = request.POST.copy()
+                for u in Keyword.objects.all():
+                    post.update({admin.ACTION_CHECKBOX_NAME: str(u.id)})
+                request._set_post(post)
+        return super(BlankCheckboxModelAdmin, self).changelist_view(request, extra_context)
+
+
 # TODO: 批量导入关键字
 @admin.register(Keyword)
-class KeywordAdmin(admin.ModelAdmin):
+class KeywordAdmin(BlankCheckboxModelAdmin):
     list_display = ['name', 'images_count']
     search_fields = ['name']
-    actions = ['download_packed_images_action', 'images_upload_action', 'batch_generate_tasks']
+    actions = [
+        'download_packed_images_action',
+        'images_upload_action',
+        'batch_generate_tasks_action',
+    ]
     inlines = [ImageInline]
 
     def images_count(self, obj):
@@ -96,14 +115,14 @@ class KeywordAdmin(admin.ModelAdmin):
 
     download_packed_images_action.short_description = '下载所选关键字图片库'
 
-    def batch_generate_tasks(self, request, queryset):
+    def batch_generate_tasks_action(self, request, queryset):
         for keyword_obj in queryset:
             task_obj = Task(keyword=keyword_obj)
             task_obj.save()
             crawl_image.delay(task_obj.keyword.name, task_obj.id)
         return HttpResponseRedirect('/admin/crawler/task/')
 
-    batch_generate_tasks.short_description = '批量生成所选关键字任务'
+    batch_generate_tasks_action.short_description = '批量生成所选关键字任务'
 
     # TODO: 将批量上传转为celery任务
     # TODO: 文件选择后显示文件列表，save后二次确认页面
@@ -143,15 +162,6 @@ class ImageAdmin(admin.ModelAdmin):
     readonly_fields = ['image_element']
     actions = ['delete_redundant_files_action']
     list_per_page = 20
-
-    def changelist_view(self, request, extra_context=None):
-        if 'action' in request.POST and request.POST['action'] == 'delete_redundant_files_action':
-            if not request.POST.getlist(admin.ACTION_CHECKBOX_NAME):
-                post = request.POST.copy()
-                for u in Keyword.objects.all():
-                    post.update({admin.ACTION_CHECKBOX_NAME: str(u.id)})
-                request._set_post(post)
-        return super(ImageAdmin, self).changelist_view(request, extra_context)
 
     def download_time(self, instance):
         if not instance.task:
