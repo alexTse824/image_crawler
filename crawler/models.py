@@ -1,6 +1,3 @@
-import os
-import imghdr
-import hashlib
 from django.utils.html import mark_safe
 from django.db import models
 
@@ -10,7 +7,7 @@ class Image(models.Model):
     id = models.AutoField(primary_key=True)
     url = models.CharField(max_length=128, null=True, blank=True)
     md5 = models.CharField(verbose_name='MD5', max_length=32, unique=True)
-    task = models.ForeignKey('Task', verbose_name='任务', related_name='images', on_delete=models.PROTECT, null=True,
+    task = models.ForeignKey('Task', verbose_name='任务', related_name='images', on_delete=models.SET_NULL, null=True,
                              blank=True)
     keyword = models.ForeignKey('Keyword', verbose_name='关键字', related_name='images', on_delete=models.PROTECT)
     status = models.BooleanField(verbose_name='筛选状态', null=True, blank=True)
@@ -57,10 +54,23 @@ class Task(models.Model):
     end_time = models.DateTimeField(verbose_name='结束时间', null=True, blank=True)
     keyword = models.ForeignKey('Keyword', verbose_name='关键字', related_name='tasks', on_delete=models.PROTECT)
     scanned_images_count = models.IntegerField(verbose_name='图片扫描数量', null=True, blank=True)
+    spider = models.ForeignKey('Spider', verbose_name='爬虫', related_name='tasks', on_delete=models.PROTECT, null=True, blank=True)
 
     class Meta:
         verbose_name = '任务'
         verbose_name_plural = '任务'
 
     def __str__(self):
-        return str(self.id)
+        return '{} <{}>'.format(self.keyword, self.start_time.strftime('%Y-%m-%d %H:%M:%S'))
+
+
+class Spider(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(verbose_name='爬虫', max_length=32, unique=True, null=False, blank=False)
+
+    class Meta:
+        verbose_name = '爬虫'
+        verbose_name_plural = '爬虫'
+
+    def __str__(self):
+        return self.name

@@ -4,7 +4,7 @@ from django.contrib import admin, messages
 from django.shortcuts import render, HttpResponseRedirect
 from django.core.files.base import ContentFile
 
-from .models import Image, Keyword, Task
+from .models import Image, Keyword, Task, Spider
 from .tasks import crawl_image, delete_redundant_files
 from .forms import SelectFilesForm
 from utils.utils import zip_files, get_file_md5_postfix
@@ -34,6 +34,8 @@ class KeywordAdmin(admin.ModelAdmin):
 
     download_packed_images_action.short_description = '下载所选关键字图片库'
 
+    # TODO: 将批量上传转为celery任务
+    # TODO: 文件选择后显示文件列表，save后二次确认页面
     def images_upload_action(self, request, queryset):
         if len(queryset) > 1:
             messages.error(request, '不能上传同时至多个图片库')
@@ -96,10 +98,10 @@ class ImageAdmin(admin.ModelAdmin):
 # TODO: 批量生成任务
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('id', 'keyword', 'scanned_images_count', 'images_count', 'download_rate', 'start_time', 'end_time')
+    list_display = ('id', 'keyword', 'spider', 'scanned_images_count', 'images_count', 'download_rate', 'start_time', 'end_time')
     list_display_links = ('id',)
     date_hierarchy = 'start_time'
-    fields = ['keyword']
+    fields = ['keyword', 'spider']
 
     def images_count(self, obj):
         return len(Image.objects.filter(task=obj.id))
@@ -116,6 +118,12 @@ class TaskAdmin(admin.ModelAdmin):
         obj.save()
         crawl_image.delay(obj.keyword.name, obj.id)
         super().save_model(request, obj, form, change)
+
+
+@admin.register(Spider)
+class SpiderAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name']
+    list_display_links = ['id', 'name']
 
 
 admin.site.site_header = '图片搜集管理平台'
