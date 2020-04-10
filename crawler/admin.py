@@ -178,7 +178,6 @@ class ImageAdmin(admin.ModelAdmin):
 
 
 # TODO: Task save 生成任务机制优化，通过model.save()实现
-# TODO: 任务完成后修改任务信息导致重新执行任务BUG
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     list_display = (
@@ -199,8 +198,11 @@ class TaskAdmin(admin.ModelAdmin):
     download_rate.short_description = '下载率'
 
     def save_model(self, request, obj, form, change):
+        # 新增task_obj保存前无id, 修改task_obj是id已存在, 用以判断是否执行任务
+        execute_flag = True if obj.id else False
         obj.save()
-        crawl_image.delay(obj.keyword.name, obj.id)
+        if execute_flag:
+            crawl_image.delay(obj.keyword.name, obj.id)
         super().save_model(request, obj, form, change)
 
 
