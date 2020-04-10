@@ -5,13 +5,17 @@ celery==4.4.2
 cffi==1.14.0
 cryptography==2.8
 Django==3.0.4
+django-celery-beat==2.0.0
 django-celery-results==1.2.1
+django-timezone-field==4.0
 importlib-metadata==1.6.0
 kombu==4.6.8
 pika==1.1.0
 Pillow==7.1.1
 pycparser==2.20
 PyMySQL==0.9.3
+python-crontab==2.4.1
+python-dateutil==2.8.1
 pytz==2019.3
 selenium==3.141.0
 six==1.14.0

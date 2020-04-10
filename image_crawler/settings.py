@@ -14,6 +14,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_results',
+    'django_celery_beat',
     'crawler.apps.CrawlerConfig',
 ]
 
@@ -85,4 +87,9 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = '/Users/xie/Desktop/data'
 MEDIA_URL = '/media/'
 
+# celery config
 CELERY_BROKER_URL = 'amqp://admin:admin@localhost'
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'django-cache'
+
+DB_BACKUP_DIR = os.path.join(BASE_DIR, 'backup')
