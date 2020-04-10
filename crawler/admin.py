@@ -10,11 +10,13 @@ from .forms import SelectFilesForm
 from utils.utils import zip_files, get_file_md5_postfix
 
 
+# TODO: keyword inline image
+# TODO: 批量导入关键字
 @admin.register(Keyword)
 class KeywordAdmin(admin.ModelAdmin):
     list_display = ['name', 'images_count']
     search_fields = ['name']
-    actions = ['download_packed_images_action', 'images_upload_action']
+    actions = ['download_packed_images_action', 'images_upload_action', 'batch_generate_tasks']
 
     def images_count(self, obj):
         return len(Image.objects.filter(keyword=obj.id))
@@ -33,6 +35,15 @@ class KeywordAdmin(admin.ModelAdmin):
         return response
 
     download_packed_images_action.short_description = '下载所选关键字图片库'
+
+    def batch_generate_tasks(self, request, queryset):
+        for keyword_obj in queryset:
+            task_obj = Task(keyword=keyword_obj)
+            task_obj.save()
+            crawl_image.delay(task_obj.keyword.name, task_obj.id)
+        return HttpResponseRedirect('/admin/crawler/task/')
+
+    batch_generate_tasks.short_description = '批量生成所选关键字任务'
 
     # TODO: 将批量上传转为celery任务
     # TODO: 文件选择后显示文件列表，save后二次确认页面
@@ -95,10 +106,11 @@ class ImageAdmin(admin.ModelAdmin):
     delete_redundant_files_action.short_description = '删除图片库冗余文件'
 
 
-# TODO: 批量生成任务
+# TODO: Task save 生成任务机制优化，通过model.save()实现
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('id', 'keyword', 'spider', 'scanned_images_count', 'images_count', 'download_rate', 'start_time', 'end_time')
+    list_display = (
+        'id', 'keyword', 'spider', 'scanned_images_count', 'images_count', 'download_rate', 'start_time', 'end_time')
     list_display_links = ('id',)
     date_hierarchy = 'start_time'
     fields = ['keyword', 'spider']
