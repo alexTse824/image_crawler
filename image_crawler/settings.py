@@ -87,6 +87,45 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = '/Users/xie/Desktop/data'
 MEDIA_URL = '/media/'
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}][{levelname}][{module}]{message}',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'server.log'),
+            'formatter': 'verbose'
+        }
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO'
+    },
+    'loggers': {
+        'django': {
+            'handlers': [],
+            'level': 'INFO',
+            'propagete': True
+        }
+    }
+}
+
 # celery config
 CELERY_BROKER_URL = 'amqp://admin:admin@localhost'
 CELERY_RESULT_BACKEND = 'django-db'
