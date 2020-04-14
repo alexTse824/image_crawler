@@ -3,6 +3,7 @@
 **/.idea/*
 
 geckodriver
+config.ini
 
 /backup/*
 log/*

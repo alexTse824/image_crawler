@@ -1,6 +1,7 @@
 import os
 import time
 import traceback
+import configparser
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from concurrent.futures import ThreadPoolExecutor
@@ -10,9 +11,8 @@ from django.conf import settings
 from crawler.models import Image, Keyword, Task
 from utils.utils import get_file_md5_postfix
 
-
-MAX_THREAD = 4
-PROXY = 'https://xgjpac.com/houxudonggis/5300657.pac'
+config = configparser.ConfigParser()
+config.read(settings.CONFIG_FILE)
 
 
 class GoogleCrawler:
@@ -25,7 +25,7 @@ class GoogleCrawler:
     def get_browser():
         profile = webdriver.FirefoxProfile()
         profile.set_preference("network.proxy.type", 2)
-        profile.set_preference('network.proxy.autoconfig_url', PROXY)
+        profile.set_preference('network.proxy.autoconfig_url', config.get('crawler', 'pac_url'))
 
         options = Options()
         options.headless = True
@@ -94,7 +94,7 @@ class GoogleCrawler:
             task_obj.scanned_images_count = len(ele_list)
             task_obj.save()
 
-            pool = ThreadPoolExecutor(MAX_THREAD)
+            pool = ThreadPoolExecutor(config.getint('crawler', 'threads'))
             for element in ele_list:
                 self.scorll_to_element_by_js(self.browser, element)
                 webdriver.ActionChains(self.browser).move_to_element(element).click(element).perform()

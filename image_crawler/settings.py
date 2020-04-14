@@ -1,9 +1,16 @@
 import os
 import pymysql
+import configparser
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SECRET_KEY = '3s8au@&f)a=-evo8d(6=99_)ix9kd#swc-fwn8xz2xgljnjiof'
+
+CONFIG_FILE = os.path.join(BASE_DIR, 'config.ini')
+
+config = configparser.ConfigParser()
+config.read(CONFIG_FILE)
+
+SECRET_KEY = config.get('django', 'secret_key')
 DEBUG = True
 ALLOWED_HOSTS = []
 
@@ -53,11 +60,11 @@ pymysql.install_as_MySQLdb()
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'image_crawler',
-        'USER': 'root',
-        'PASSWORD': '123456',
-        'HOST': '127.0.0.1',
-        'PORT': 3306,
+        'NAME': config.get('db', 'name'),
+        'USER': config.get('db', 'user'),
+        'PASSWORD': config.get('db', 'password'),
+        'HOST': config.get('db', 'host'),
+        'PORT': config.getint('db', 'port'),
     }
 }
 
@@ -85,7 +92,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_ROOT = '/Users/xie/Desktop/data'
+MEDIA_ROOT = config.get('django', 'media_root')
 MEDIA_URL = '/media/'
 
 LOGGING = {
@@ -129,10 +136,16 @@ LOGGING = {
 }
 
 # celery config
-CELERY_BROKER_URL = 'amqp://admin:admin@localhost'
+CELERY_BROKER_URL = 'amqp://{}:{}@{}:{}'.format(
+    config.get('rabbitmq', 'user'),
+    config.get('rabbitmq', 'password'),
+    config.get('rabbitmq', 'host'),
+    config.get('rabbitmq', 'port')
+)
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'django-cache'
 
-DB_BACKUP_DIR = os.path.join(BASE_DIR, 'backup')
+DB_BACKUP_DIR = os.path.join(MEDIA_ROOT, 'backup')
 
-WEBDRIVER_PATH = os.path.join(BASE_DIR, 'geckodriver')
+WEBDRIVER_PATH = config.get('crawler', 'webdriver')
+PAC_URL = config.get('crawler', 'pac_url')
