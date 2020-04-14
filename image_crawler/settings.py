@@ -108,10 +108,11 @@ LOGGING = {
         },
         'file': {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'server.log'),
-            'formatter': 'verbose'
-        }
+            'formatter': 'verbose',
+            'maxBytes': 1024 * 1024 * 100,
+        },
     },
     'root': {
         'handlers': ['console', 'file'],
@@ -119,10 +120,10 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': [],
+            'handlers': ['console', 'file'],
             'level': 'INFO',
-            'propagete': True
-        }
+            'propagete': False
+        },
     }
 }
 
