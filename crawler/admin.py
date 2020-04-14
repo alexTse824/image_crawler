@@ -111,6 +111,7 @@ class KeywordAdmin(BlankCheckboxModelAdmin):
         response = FileResponse(open(zip_path, 'rb'))
         response['Content-Type'] = 'application/octet-stream'
         response['Content-Disposition'] = f'attachment;filename="{os.path.split(zip_path)[-1]}"'
+        os.remove(zip_path)
         return response
 
     download_packed_images_action.short_description = '下载所选关键字图片库'
