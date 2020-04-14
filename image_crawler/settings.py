@@ -83,6 +83,7 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_ROOT = '/Users/xie/Desktop/data'
 MEDIA_URL = '/media/'
@@ -109,7 +110,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'server.log'),
+            'filename': os.path.join(BASE_DIR, 'log', 'server.log'),
             'formatter': 'verbose',
             'maxBytes': 1024 * 1024 * 100,
         },
@@ -133,3 +134,5 @@ CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'django-cache'
 
 DB_BACKUP_DIR = os.path.join(BASE_DIR, 'backup')
+
+WEBDRIVER_PATH = os.path.join(BASE_DIR, 'geckodriver')

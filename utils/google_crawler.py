@@ -1,16 +1,17 @@
+import os
 import time
 import traceback
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from concurrent.futures import ThreadPoolExecutor
 from django.core.files.base import ContentFile
+from django.conf import settings
 
 from crawler.models import Image, Keyword, Task
 from utils.utils import get_file_md5_postfix
 
 
 MAX_THREAD = 4
-DRIVER = '/Users/xie/code/image_crawler/utils/geckodriver'
 PROXY = 'https://xgjpac.com/houxudonggis/5300657.pac'
 
 
@@ -29,7 +30,12 @@ class GoogleCrawler:
         options = Options()
         options.headless = True
 
-        return webdriver.Firefox(executable_path=DRIVER, firefox_profile=profile, options=options)
+        return webdriver.Firefox(
+            executable_path=settings.WEBDRIVER_PATH,
+            firefox_profile=profile,
+            log_path=os.path.join(settings.BASE_DIR, 'log', 'geckodriver.log'),
+            options=options
+        )
 
     @staticmethod
     def scorll_to_element_by_js(browser, tag):

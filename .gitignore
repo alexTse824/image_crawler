@@ -1,9 +1,13 @@
 **/.DS_Store
 **/__pycache__/*
-**/venv/*
 **/.idea/*
-*.log
 
-**/geckodriver
+geckodriver
 
 /backup/*
+log/*
+venv/*
+static/*
+
+!.gitkeep
+
