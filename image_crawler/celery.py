@@ -32,7 +32,7 @@ def setup_loggers(logger, *args, **kwargs):
 @app.task
 def db_backup():
     TIMESTAMP = time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
-    cmd = 'echo {} | sudo -S docker exec -i 0355 mysqldump -u{} -p{} {} > {}'
+    cmd = 'echo {} | sudo -S docker exec -i mysql mysqldump -u{} -p{} {} > {}'
     os.system(cmd.format(
         config.get('celery', 'sudo_password'),
         settings.DATABASES['default']['USER'],

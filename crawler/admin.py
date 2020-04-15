@@ -200,7 +200,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         # 新增task_obj保存前无id, 修改task_obj是id已存在, 用以判断是否执行任务
-        execute_flag = True if obj.id else False
+        execute_flag = False if obj.id else True
         obj.save()
         if execute_flag:
             crawl_image.delay(obj.keyword.name, obj.id)
