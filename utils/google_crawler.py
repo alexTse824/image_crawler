@@ -7,12 +7,15 @@ from selenium.webdriver.firefox.options import Options
 from concurrent.futures import ThreadPoolExecutor
 from django.core.files.base import ContentFile
 from django.conf import settings
+from celery.utils.log import get_task_logger
 
 from crawler.models import Image, Keyword, Task
 from utils.utils import get_file_md5_postfix
 
 config = configparser.ConfigParser()
 config.read(settings.CONFIG_FILE)
+
+logger = get_task_logger(__name__)
 
 
 class GoogleCrawler:
@@ -60,7 +63,7 @@ class GoogleCrawler:
                 )
                 img_obj.image_file.save(f'{md5_filename}.{postfix}', ContentFile(img))
         except Exception:
-            print(traceback.print_exc())
+            logger.error(traceback.print_exc())
         finally:
             browser.quit()
 
@@ -89,7 +92,7 @@ class GoogleCrawler:
                     scroll_flag = 0
 
             ele_list = self.browser.find_elements_by_class_name('rg_i')
-            print(f'Scanned {len(ele_list)} {self.keyword} images.')
+            logger.info(f'Scanned {len(ele_list)} {self.keyword} images.')
             task_obj = Task.objects.get(id=self.task_id)
             task_obj.scanned_images_count = len(ele_list)
             task_obj.save()
@@ -106,6 +109,6 @@ class GoogleCrawler:
                         pool.submit(self.get_screenshot, src)
             pool.shutdown(wait=True)
         except Exception:
-            print(traceback.print_exc())
+            logger.error(traceback.print_exc())
         finally:
             self.browser.quit()
