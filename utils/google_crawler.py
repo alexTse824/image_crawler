@@ -27,9 +27,9 @@ class GoogleCrawler:
     @staticmethod
     def get_browser():
         profile = webdriver.FirefoxProfile()
-        profile.set_preference("network.proxy.type", 2)
+        profile.set_preference('network.proxy.type', 2)
         profile.set_preference('network.proxy.autoconfig_url', config.get('crawler', 'pac_url'))
-
+        profile.set_preference('intl.accept_languages', 'en-US, en')
         options = Options()
         options.headless = True
 
@@ -72,15 +72,15 @@ class GoogleCrawler:
             url = 'https://www.google.com/search?q={}&tbm=isch'.format(self.keyword)
             self.browser.get(url)
 
-            more_result_btn_xpath = '//input[@value="显示更多搜索结果"]'
+            more_result_btn_xpath = '//input[@value="Show more results"]'
             scroll_flag = 0
             last_scroll_distance = 0
             while scroll_flag <= 10:
                 self.browser.execute_script("window.scrollTo(0,document.body.scrollHeight)")
                 scroll_distance = self.browser.execute_script('return window.pageYOffset;')
                 if scroll_distance == last_scroll_distance:
-                    more_result_btn = self.browser.find_element_by_xpath(more_result_btn_xpath)
                     try:
+                        more_result_btn = self.browser.find_element_by_xpath(more_result_btn_xpath)
                         more_result_btn.click()
                         continue
                     except Exception:

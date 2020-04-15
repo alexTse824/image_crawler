@@ -39,5 +39,4 @@ def db_backup():
         settings.DATABASES['default']['PASSWORD'],
         settings.DATABASES['default']['NAME'],
         os.path.join(settings.DB_BACKUP_DIR, f'bak_{TIMESTAMP}.sql'),
-
     ))
