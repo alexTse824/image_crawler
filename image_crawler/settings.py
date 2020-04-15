@@ -11,8 +11,8 @@ config = configparser.ConfigParser()
 config.read(CONFIG_FILE)
 
 SECRET_KEY = config.get('django', 'secret_key')
-DEBUG = True
-ALLOWED_HOSTS = []
+DEBUG = config.getboolean('django', 'debug')
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -28,12 +28,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'image_crawler.urls'
@@ -91,6 +93,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
 
 MEDIA_ROOT = config.get('django', 'media_root')
 MEDIA_URL = '/media/'
